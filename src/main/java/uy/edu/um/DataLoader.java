@@ -1,42 +1,86 @@
 package uy.edu.um;
-
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import uy.edu.um.tad.hash.MyHash;
+import uy.edu.um.tad.hash.MyHashImpl;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
+import uy.edu.um.tad.linkedlist.MyList;
+
+import java.text.ParseException;
+import java.util.Date;
 
 public class DataLoader {
+    private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
+
+
 
     public void cargarDatos() {
+
         String csvFile = "tuArchivo.csv";
-        try (CSVReader reader = new CSVReader(new FileReader(csvFile))){
+        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
             String[] nextLine;
+
             // Leer la cabecera si querés saltarla
+
+            Pelicula pelicula = new Pelicula();
+
             reader.readNext();
             while ((nextLine = reader.readNext()) != null) {
+
                 // Cada nextLine es un array con los campos bien separados
-                String adult = nextLine[0];
+
                 String belongsToCollection = nextLine[1];
-                String budget = nextLine[2];
-                String genres = nextLine[3];
-                String homepage = nextLine[4];
-                String id = nextLine[5];
-                String imdb_id = nextLine[6];
+                int idColeccion;
+                String nombreColeccion;
+
+                if (belongsToCollection != null && !belongsToCollection.equals("null") && !){
+
+                }else{
+
+                }
+
+                int budget = Integer.parseInt(nextLine[2]);
+                pelicula.setPresupuesto(budget);
+
+                String genres = nextLine[3].replace("'", "\"");
+                JSONArray arrayGeneros = new JSONArray(genres);
+                for (int i = 0; i < arrayGeneros.length(); i++) {
+                    JSONObject generObj = arrayGeneros.getJSONObject(i);
+                   String nombreGenero = generObj.getString("name");
+                    pelicula.getGeneros().add(nombreGenero);
+                }
+
+                int id = Integer.parseInt(nextLine[5]);
+                pelicula.setId(id);
+
                 String original_language = nextLine[7];
-                String original_title = nextLine[8];
-                String overview = nextLine[9];
-                String production_companies = nextLine[10];
-                String production_countries = nextLine[11];
-                String release_date = nextLine[12];
-                String revenue = nextLine[13];
-                String runtime = nextLine[14];
-                String spoken_languages = nextLine[15];
-                String status = nextLine[16];
-                String tagline = nextLine[17];
+                pelicula.setIdiomaOriginal(original_language);
+
+                long release_date = Date.parse(nextLine[12]);
+                pelicula.setFechaEstreno(release_date);
+
+                int revenue = Integer.parseInt(nextLine[13]);
+                pelicula.setGanancias(revenue);
+
                 String title = nextLine[18];
+                pelicula.setTitulo(title);
+
+
+                peliculas.put(id, pelicula);
 
             }
+
+
+
+
+
+
+
 
         }catch(IOException | CsvValidationException e){
             e.printStackTrace();
