@@ -21,6 +21,7 @@ public class Pelicula {
     private int presupuesto;
     private int ganancias;
     private int cantidadEvaluaciones;
+    private int duracion;
 
     private long fechaEstreno;
 
@@ -36,7 +37,7 @@ public class Pelicula {
     private String tituloColeccion;
     private String director;
 
-    private Date duracion;
+
 
 
 

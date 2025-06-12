@@ -16,10 +16,12 @@ import java.util.Date;
 
 public class DataLoader {
     private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
+    private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
+    private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
 
 
 
-    public void cargarDatos() {
+    public void cargarDatosPeliculas() {
 
         String csvFile = "tuArchivo.csv";
         try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
@@ -38,10 +40,14 @@ public class DataLoader {
                 int idColeccion;
                 String nombreColeccion;
 
-                if (belongsToCollection != null && !belongsToCollection.equals("null") && !){
-
+                if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty()){
+                    belongsToCollection = belongsToCollection.replace("'", "\"");
+                    JSONObject jsonColeccion = new JSONObject(belongsToCollection);
+                    idColeccion = jsonColeccion.getInt("id");
+                    nombreColeccion = jsonColeccion.getString("name");
                 }else{
-
+                    idColeccion = Integer.parseInt(nextLine[5]);
+                    nombreColeccion = nextLine[18];
                 }
 
                 int budget = Integer.parseInt(nextLine[2]);
@@ -86,4 +92,7 @@ public class DataLoader {
             e.printStackTrace();
         }
     }
+
+
+
 }

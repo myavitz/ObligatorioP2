@@ -11,7 +11,7 @@ public class Main {
 
     public static void cargaData(){
         DataLoader main = new DataLoader();
-        main.cargarDatos();
+        main.cargarDatosPeliculas();
 
 
 
