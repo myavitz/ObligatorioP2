@@ -12,6 +12,7 @@ import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DataLoader {
@@ -21,74 +22,131 @@ public class DataLoader {
 
 
 
-    public void cargarDatosPeliculas() {
+    public void cargarDatos() {
 
-        String csvFile = "tuArchivo.csv";
+        int peliculasCargadas = 0;
+        int erroresParseo = 0;
+        long inicio = System.currentTimeMillis();
+
+        String csvFile = "movies_metadata.csv";
         try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
             String[] nextLine;
-
-            // Leer la cabecera si querés saltarla
-
-            Pelicula pelicula = new Pelicula();
 
             reader.readNext();
             while ((nextLine = reader.readNext()) != null) {
 
-                // Cada nextLine es un array con los campos bien separados
+                Pelicula pelicula = new Pelicula();
 
                 String belongsToCollection = nextLine[1];
                 int idColeccion;
                 String nombreColeccion;
 
-                if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty()){
-                    belongsToCollection = belongsToCollection.replace("'", "\"");
-                    JSONObject jsonColeccion = new JSONObject(belongsToCollection);
-                    idColeccion = jsonColeccion.getInt("id");
-                    nombreColeccion = jsonColeccion.getString("name");
-                }else{
-                    idColeccion = Integer.parseInt(nextLine[5]);
-                    nombreColeccion = nextLine[18];
+                try {
+                    if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty()) {
+                        belongsToCollection = belongsToCollection.replace("'", "\"");
+                        belongsToCollection = belongsToCollection.replace("\"{", "{");
+                        belongsToCollection = belongsToCollection.replace("}\"", "}");
+                        belongsToCollection = belongsToCollection.replace("\\\"", "\"");
+
+                        // Corregir comillas internas mal puestas
+                        belongsToCollection = belongsToCollection.replaceAll("(?<=\\w)\"(?=\\w)", "'");
+
+                        JSONObject jsonColeccion = new JSONObject(belongsToCollection);
+                        idColeccion = jsonColeccion.getInt("id");
+                        nombreColeccion = jsonColeccion.getString("name");
+                    } else {
+                        idColeccion = Integer.parseInt(nextLine[5]);
+                        nombreColeccion = nextLine[18];
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error parseando belongsToCollection en línea con id: " + nextLine[5]);
+                    System.out.println("Valor problemático: " + belongsToCollection);
+                    e.printStackTrace();
+                    erroresParseo++;
+                    continue; // Saltar esta película y continuar con la siguiente
                 }
 
-                int budget = Integer.parseInt(nextLine[2]);
+                int budget = 0;
+                if (nextLine[2] != null && !nextLine[2].isEmpty() && !nextLine[2].equals("NaN")) {
+                    try {
+                        budget = Integer.parseInt(nextLine[2]);
+                    } catch (NumberFormatException e) {
+                        budget = 0; // Si falla, lo dejamos en 0
+                    }
+                }
                 pelicula.setPresupuesto(budget);
 
-                String genres = nextLine[3].replace("'", "\"");
-                JSONArray arrayGeneros = new JSONArray(genres);
-                for (int i = 0; i < arrayGeneros.length(); i++) {
-                    JSONObject generObj = arrayGeneros.getJSONObject(i);
-                   String nombreGenero = generObj.getString("name");
-                    pelicula.getGeneros().add(nombreGenero);
+                try {
+                    String genres = nextLine[3].replace("'", "\"");
+                    genres = genres.replace("\"[", "[");
+                    genres = genres.replace("]\"", "]");
+                    genres = genres.replace("\\\"", "\"");
+
+                    JSONArray arrayGeneros = new JSONArray(genres);
+                    for (int i = 0; i < arrayGeneros.length(); i++) {
+                        JSONObject generObj = arrayGeneros.getJSONObject(i);
+                        String nombreGenero = generObj.getString("name");
+                        pelicula.getGeneros().add(nombreGenero);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error parseando genres en línea con id: " + nextLine[5]);
+                    System.out.println("Valor problemático: " + nextLine[3]);
+                    e.printStackTrace();
+                    erroresParseo++;
+                    // Continuar aunque pierda géneros
                 }
 
-                int id = Integer.parseInt(nextLine[5]);
-                pelicula.setId(id);
+                try {
+                    int id = Integer.parseInt(nextLine[5]);
+                    pelicula.setId(id);
 
-                String original_language = nextLine[7];
-                pelicula.setIdiomaOriginal(original_language);
+                    String original_language = nextLine[7];
+                    pelicula.setIdiomaOriginal(original_language);
 
-                long release_date = Date.parse(nextLine[12]);
-                pelicula.setFechaEstreno(release_date);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    Date r_date = null;
 
-                int revenue = Integer.parseInt(nextLine[13]);
-                pelicula.setGanancias(revenue);
+                    if (nextLine[12] != null && !nextLine[12].isEmpty()) {
+                        try {
+                            r_date = sdf.parse(nextLine[12]);
+                        } catch (ParseException e) {
+                            r_date = null;
+                        }
+                    }
+                    pelicula.setFechaEstreno(r_date);
 
-                String title = nextLine[18];
-                pelicula.setTitulo(title);
+                    int revenue = 0;
+                    if (nextLine[13] != null && !nextLine[13].isEmpty() && !nextLine[13].matches(".*[a-zA-Z]+.*")) {
+                        try {
+                            revenue = Integer.parseInt(nextLine[13]);
+                        } catch (NumberFormatException e) {
+                            revenue = 0;
+                        }
+                    }
+                    pelicula.setGanancias(revenue);
 
+                    String title = nextLine[18];
+                    pelicula.setTitulo(title);
 
-                peliculas.put(id, pelicula);
+                    peliculas.put(id, pelicula);
+                    peliculasCargadas++;
 
+                    System.out.println("Película cargada: " + id + " - " + title);
+
+                } catch (Exception e) {
+                    System.out.println("Error procesando datos finales de la película con id: " + nextLine[5]);
+                    e.printStackTrace();
+                    erroresParseo++;
+                }
             }
 
+            long fin = System.currentTimeMillis();
+            System.out.println("Carga finalizada.");
+            System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
+            System.out.println("Errores de parseo: " + erroresParseo);
+            System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
 
-
-
-
-
-
-
-        }catch(IOException | CsvValidationException e){
+        } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
         }
     }

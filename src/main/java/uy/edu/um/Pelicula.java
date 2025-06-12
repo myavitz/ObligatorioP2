@@ -23,7 +23,7 @@ public class Pelicula {
     private int cantidadEvaluaciones;
     private int duracion;
 
-    private long fechaEstreno;
+    private Date fechaEstreno;
 
     private double sumaCalificaciones;
 
