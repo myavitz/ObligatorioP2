@@ -180,7 +180,7 @@ public class DataLoader {
         }catch(IOException | CsvValidationException e){
             e.printStackTrace();
         }
-        System.out.println("Hubieron "+ maserrores + " errores");
+        System.out.println("Hubieron "+ maserrores + " Errores");
 
     }
 
