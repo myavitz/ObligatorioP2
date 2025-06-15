@@ -158,19 +158,17 @@ public class DataLoader {
                 int idpeli = Integer.parseInt(nextLine[2]);
                 try {
                     String mac = nextLine[0];
-                    mac = mac.replace("'", "\"");
+                    mac = mac.replaceAll("(?<=\\w)\"(?=\\w)", "'");
                     mac = mac.replace("\"[", "[");
                     mac = mac.replace("]\"", "]");
-                    //Error en el replace: Ej: da error porque cambia "Homer's Mother" a "Homer"s Mother" y se rompe todito
-                    //Entonces ahora uso esto
-                    mac = mac.replaceAll("(?<=\\w)\"(?=\\w)", "'");
                     JSONArray macarray = new JSONArray(mac);
+                    System.out.println(mac);
                     for (int i = 0; i < macarray.length(); i++) {
                         JSONObject actObj = macarray.getJSONObject(i);
                         String nombreactor = actObj.getString("name");
                         if(peliculas.get(idpeli)!=null)
                             peliculas.get(idpeli).getActores().add(nombreactor);
-                        System.out.println(nombreactor);
+
                     }
 
                 }catch(Exception e){
@@ -182,7 +180,7 @@ public class DataLoader {
         }catch(IOException | CsvValidationException e){
             e.printStackTrace();
         }
-        System.out.println(maserrores);
+        System.out.println("Hubieron "+ maserrores + " errores");
 
     }
 
