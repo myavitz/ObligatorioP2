@@ -28,8 +28,8 @@ public class DataLoader {
         int erroresParseo = 0;
         long inicio = System.currentTimeMillis();
 
-        String csvFile = "movies_metadata.csv";
-        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
+        String csvmetadata = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\movies_metadata.csv";
+        try (CSVReader reader = new CSVReader(new FileReader(csvmetadata))) {
             String[] nextLine;
 
             reader.readNext();
@@ -149,6 +149,41 @@ public class DataLoader {
         } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
         }
+        String csvcreditos = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\credits.csv";
+        int maserrores = 0;
+        try (CSVReader reader2 = new CSVReader(new FileReader(csvcreditos))){
+            String [] nextLine;
+            reader2.readNext();
+            while((nextLine = reader2.readNext()) != null){
+                int idpeli = Integer.parseInt(nextLine[2]);
+                try {
+                    String mac = nextLine[0];
+                    mac = mac.replace("'", "\"");
+                    mac = mac.replace("\"[", "[");
+                    mac = mac.replace("]\"", "]");
+                    //Error en el replace: Ej: da error porque cambia "Homer's Mother" a "Homer"s Mother" y se rompe todito
+                    //Entonces ahora uso esto
+                    mac = mac.replaceAll("(?<=\\w)\"(?=\\w)", "'");
+                    JSONArray macarray = new JSONArray(mac);
+                    for (int i = 0; i < macarray.length(); i++) {
+                        JSONObject actObj = macarray.getJSONObject(i);
+                        String nombreactor = actObj.getString("name");
+                        if(peliculas.get(idpeli)!=null)
+                            peliculas.get(idpeli).getActores().add(nombreactor);
+                        System.out.println(nombreactor);
+                    }
+
+                }catch(Exception e){
+                    System.out.println("error parseando en id " + idpeli);
+                    maserrores++;
+                }
+
+            }
+        }catch(IOException | CsvValidationException e){
+            e.printStackTrace();
+        }
+        System.out.println(maserrores);
+
     }
 
 
