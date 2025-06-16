@@ -36,3 +36,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### DATASETS V2 ###
+bash
+/credits.csv/
+/movies_metadata.csv/
+/ratings_1mm.csv/
