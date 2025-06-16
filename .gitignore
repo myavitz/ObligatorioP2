@@ -39,4 +39,6 @@ build/
 
 ### DATASETS V2 ###
 bash
-/DATASETS v2/
+/credits.csv/
+/movies_metadata.csv/
+/ratings_1mm.csv/
