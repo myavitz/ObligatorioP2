@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### DATASETS V2 ###
+bash
+/DATASETS v2/
