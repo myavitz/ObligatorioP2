@@ -28,7 +28,7 @@ public class DataLoader {
         int erroresParseo = 0;
         long inicio = System.currentTimeMillis();
 
-        String csvmetadata = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\movies_metadata.csv";
+        String csvmetadata = "movies_metadata.csv";
         try (CSVReader reader = new CSVReader(new FileReader(csvmetadata))) {
             String[] nextLine;
 
