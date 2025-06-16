@@ -1,13 +1,21 @@
 package uy.edu.um;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import uy.edu.um.tad.hash.MyHash;
 import uy.edu.um.tad.hash.MyHashImpl;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
 
@@ -16,53 +24,91 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DataLoader {
+
     private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
     private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
     private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
 
+    private String belongsToCollectionCrudo;
+    private Integer idColeccionRecuperado;
+    private String nombreColeccionRecuperado;
 
 
     public void cargarDatos() {
-
+        int lineaActual = 1;
         int peliculasCargadas = 0;
         int erroresParseo = 0;
         long inicio = System.currentTimeMillis();
 
-        String csvmetadata = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\movies_metadata.csv";
-        try (CSVReader reader = new CSVReader(new FileReader(csvmetadata))) {
-            String[] nextLine;
+        String csvFile = "movies_metadata.csv";
+        String csvcreditos = "credits.csv";
 
-            reader.readNext();
+        String[] nextLine = null;
+
+        CSVParser parser = new CSVParserBuilder()
+                .withSeparator(',')
+                .withQuoteChar('"')
+                .build();
+
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(csvFile))
+                .withCSVParser(parser)
+                .build()) {
+
+            reader.readNext(); // salto cabecera
+
             while ((nextLine = reader.readNext()) != null) {
+                lineaActual++;
+
+                if (nextLine.length < 19) {
+                    System.out.println("Línea con columnas insuficientes en línea: " + lineaActual);
+                    erroresParseo++;
+                    continue;
+                }
 
                 Pelicula pelicula = new Pelicula();
 
                 String belongsToCollection = nextLine[1];
+
                 int idColeccion;
                 String nombreColeccion;
+                boolean lineaValida = true;
 
                 try {
-                    if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty()) {
-                        belongsToCollection = belongsToCollection.replaceAll("(?<=\\w)\"(?=\\w)", "'");
-                        belongsToCollection = belongsToCollection.replace("\"{", "{");
-                        belongsToCollection = belongsToCollection.replace("}\"", "}");
-                        belongsToCollection = belongsToCollection.replace("\\\"", "\"");
+                    if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty() && belongsToCollection.trim().startsWith("{")) {
+                        belongsToCollection = belongsToCollection.replaceAll("(?<=\\{|, )'(\\w+)':", "\"$1\":");  // claves
+                        belongsToCollection = belongsToCollection.replaceAll(":\\s*'(.*?)'(?=[,}])", ": \"$1\""); // valores
+
 
                         // Corregir comillas internas mal puestas
+
+                        belongsToCollection = belongsToCollection.replace("None", "null");
+
 
                         JSONObject jsonColeccion = new JSONObject(belongsToCollection);
                         idColeccion = jsonColeccion.getInt("id");
                         nombreColeccion = jsonColeccion.getString("name");
                     } else {
-                        idColeccion = Integer.parseInt(nextLine[5]);
+                        try {
+                            idColeccion = Integer.parseInt(nextLine[5]); // id de la película
+                        } catch (NumberFormatException e) {
+                            System.out.println("ID inválido en línea: " + lineaActual);
+                            lineaValida = false;
+                        }
                         nombreColeccion = nextLine[18];
                     }
                 } catch (Exception e) {
-                    System.out.println("Error parseando belongsToCollection en línea con id: " + nextLine[5]);
-                    System.out.println("Valor problemático: " + belongsToCollection);
-                    e.printStackTrace();
+                    System.out.println("Película ignorada por error en belongsToCollection en línea: " + lineaActual);
+                    System.out.println("Detalle: " + e.getMessage());
+                    System.out.println("----------------------------------------------------");
                     erroresParseo++;
                     continue; // Saltar esta película y continuar con la siguiente
+                }
+
+                if (!lineaValida) {
+                    System.out.println("Película ignorada por ID inválido en línea: " + lineaActual);
+                    System.out.println("----------------------------------------------------");
+                    erroresParseo++;
+                    continue;
                 }
 
                 int budget = 0;
@@ -90,6 +136,8 @@ public class DataLoader {
                 } catch (Exception e) {
                     System.out.println("Error parseando genres en línea con id: " + nextLine[5]);
                     System.out.println("Valor problemático: " + nextLine[3]);
+                    System.out.println("Error parseando en línea: " + lineaActual);
+                    System.out.println("ID o dato clave: " + nextLine[5]);
                     e.printStackTrace();
                     erroresParseo++;
                     // Continuar aunque pierda géneros
@@ -130,33 +178,45 @@ public class DataLoader {
                     peliculas.put(id, pelicula);
                     peliculasCargadas++;
 
-                    System.out.println("Película cargada: " + id + " - " + title);
-
                 } catch (Exception e) {
-                    System.out.println("Error procesando datos finales de la película con id: " + nextLine[5]);
+                    System.out.println("Error procesando datos finales de la película con id: " + (nextLine != null && nextLine.length > 5 ? nextLine[5] : "desconocido"));
                     e.printStackTrace();
                     erroresParseo++;
                 }
             }
 
-            long fin = System.currentTimeMillis();
-            System.out.println("Carga finalizada.");
-            System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
-            System.out.println("Errores de parseo: " + erroresParseo);
-            System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
 
         } catch (IOException | CsvValidationException e) {
+            System.out.println("Error general leyendo el archivo CSV en línea: " + lineaActual);
+            if (nextLine != null && nextLine.length > 5) {
+                System.out.println("ID o dato clave: " + nextLine[5]);
+            }
             e.printStackTrace();
         }
-        String csvcreditos = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\credits.csv";
+
         int maserrores = 0;
-        try (CSVReader reader2 = new CSVReader(new FileReader(csvcreditos))){
-            String [] nextLine;
+        lineaActual = 0;
+        int idpeli=0;
+
+        try (CSVReader reader2 = new CSVReaderBuilder(new FileReader(csvcreditos))
+                .withCSVParser(parser)
+                .build()) {
+
+            nextLine=null;
             reader2.readNext();
-            while((nextLine = reader2.readNext()) != null){
-                int idpeli = Integer.parseInt(nextLine[2]);
+
+            while ((nextLine = reader2.readNext()) != null) {
+                lineaActual++;
+
+                try {
+                     idpeli = Integer.parseInt(nextLine[2]);
+                }catch(NumberFormatException e){
+                    System.out.println("Error parseando el idpeli en linea: " + lineaActual);
+                }
+
                 try {
                     String mac = nextLine[0];
+
                     mac = mac.replaceAll("(?<=\\w)\"(?=\\w)", "'");
                     mac = mac.replace("\"[", "[");
                     mac = mac.replace("]\"", "]");
@@ -165,16 +225,17 @@ public class DataLoader {
                     for (int i = 0; i < macarray.length(); i++) {
                         JSONObject actObj = macarray.getJSONObject(i);
                         String nombreactor = actObj.getString("name");
-                        if(peliculas.get(idpeli)!=null) {
+                        if (peliculas.get(idpeli) != null) {
                             peliculas.get(idpeli).getActores().add(nombreactor);
                         }
                     }
 
-                }catch(Exception e){
+                } catch (Exception e) {
                     maserrores++;
+                    System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
                 }
-                try{
-                    String repo =nextLine[1];
+                try {
+                    String repo = nextLine[1];
                     repo = repo.replaceAll("(?<=\\w)\"(?=\\w)", "'");
                     repo = repo.replace("\"[", "[");
                     repo = repo.replace("]\"", "]");
@@ -182,31 +243,30 @@ public class DataLoader {
 
                     for (int i = 0; i < repoarray.length(); i++) {
                         JSONObject actObj = repoarray.getJSONObject(i);
-                        String check =actObj.getString("job");
+                        String check = actObj.getString("job");
                         if (check.equals("Director")) {
                             String director = actObj.getString("name");
                             if (peliculas.get(idpeli) != null)
                                 peliculas.get(idpeli).setDirector(director);
                         }
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     maserrores++;
+                    System.out.println("Error parseando al director en linea: " + lineaActual);
                 }
-
             }
-            //int nullcount=0;
-            //for (int i =0;peliculas.size()>i;i++ ){
-            //    System.out.println(peliculas.values().get(i).getDirector());
-            //    if(peliculas.values().get(i).getDirector()==null){
-            //        nullcount++;
-            //    }
-            //}
-            //System.out.println(nullcount);
-        }catch(IOException | CsvValidationException e){
-            e.printStackTrace();
+        }catch (IOException e){
+            System.out.println("PAPA");
+        } catch (CsvValidationException e) {
+            System.out.println("Soy gay");
         }
-        System.out.println("Hubieron "+ maserrores + " Errores En los Creditos");
+
+        long fin = System.currentTimeMillis();
+        System.out.println("Carga finalizada.");
+        System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
+        System.out.println("Errores de parseo: " + erroresParseo);
+        System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
+
+        System.out.println("Total de errores: Peliculas - " + erroresParseo + " Creditos - " + maserrores);
     }
-
-
 }
