@@ -28,8 +28,8 @@ public class DataLoader {
         int erroresParseo = 0;
         long inicio = System.currentTimeMillis();
 
-        String csvFile = "movies_metadata.csv";
-        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
+        String csvmetadata = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\movies_metadata.csv";
+        try (CSVReader reader = new CSVReader(new FileReader(csvmetadata))) {
             String[] nextLine;
 
             reader.readNext();
@@ -43,13 +43,12 @@ public class DataLoader {
 
                 try {
                     if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty()) {
-                        belongsToCollection = belongsToCollection.replace("'", "\"");
+                        belongsToCollection = belongsToCollection.replaceAll("(?<=\\w)\"(?=\\w)", "'");
                         belongsToCollection = belongsToCollection.replace("\"{", "{");
                         belongsToCollection = belongsToCollection.replace("}\"", "}");
                         belongsToCollection = belongsToCollection.replace("\\\"", "\"");
 
                         // Corregir comillas internas mal puestas
-                        belongsToCollection = belongsToCollection.replaceAll("(?<=\\w)\"(?=\\w)", "'");
 
                         JSONObject jsonColeccion = new JSONObject(belongsToCollection);
                         idColeccion = jsonColeccion.getInt("id");
@@ -149,8 +148,65 @@ public class DataLoader {
         } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
         }
-    }
+        String csvcreditos = "C:\\Users\\franc\\OneDrive\\Escritorio\\DATASETS v2\\DATASETS v2\\credits.csv";
+        int maserrores = 0;
+        try (CSVReader reader2 = new CSVReader(new FileReader(csvcreditos))){
+            String [] nextLine;
+            reader2.readNext();
+            while((nextLine = reader2.readNext()) != null){
+                int idpeli = Integer.parseInt(nextLine[2]);
+                try {
+                    String mac = nextLine[0];
+                    mac = mac.replaceAll("(?<=\\w)\"(?=\\w)", "'");
+                    mac = mac.replace("\"[", "[");
+                    mac = mac.replace("]\"", "]");
+                    JSONArray macarray = new JSONArray(mac);
 
+                    for (int i = 0; i < macarray.length(); i++) {
+                        JSONObject actObj = macarray.getJSONObject(i);
+                        String nombreactor = actObj.getString("name");
+                        if(peliculas.get(idpeli)!=null) {
+                            peliculas.get(idpeli).getActores().add(nombreactor);
+                        }
+                    }
+
+                }catch(Exception e){
+                    maserrores++;
+                }
+                try{
+                    String repo =nextLine[1];
+                    repo = repo.replaceAll("(?<=\\w)\"(?=\\w)", "'");
+                    repo = repo.replace("\"[", "[");
+                    repo = repo.replace("]\"", "]");
+                    JSONArray repoarray = new JSONArray(repo);
+
+                    for (int i = 0; i < repoarray.length(); i++) {
+                        JSONObject actObj = repoarray.getJSONObject(i);
+                        String check =actObj.getString("job");
+                        if (check.equals("Director")) {
+                            String director = actObj.getString("name");
+                            if (peliculas.get(idpeli) != null)
+                                peliculas.get(idpeli).setDirector(director);
+                        }
+                    }
+                }catch (Exception e){
+                    maserrores++;
+                }
+
+            }
+            //int nullcount=0;
+            //for (int i =0;peliculas.size()>i;i++ ){
+            //    System.out.println(peliculas.values().get(i).getDirector());
+            //    if(peliculas.values().get(i).getDirector()==null){
+            //        nullcount++;
+            //    }
+            //}
+            //System.out.println(nullcount);
+        }catch(IOException | CsvValidationException e){
+            e.printStackTrace();
+        }
+        System.out.println("Hubieron "+ maserrores + " Errores En los Creditos");
+    }
 
 
 }
