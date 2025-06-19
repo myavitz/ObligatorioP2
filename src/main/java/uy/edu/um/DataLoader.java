@@ -23,10 +23,24 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DataLoader {
-
     private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
     private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
     private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
+
+    public MyList<Pelicula> peliculasComoLista() {
+        MyList<Pelicula> lista = new MyLinkedListImpl<>();
+        MyList<Integer> claves = peliculas.keys();
+
+        for (int i = 0; i < claves.size(); i++) {
+            Integer id = claves.get(i);
+            Pelicula p = peliculas.get(id);
+            if (p != null) {
+                lista.add(p);
+            }
+        }
+
+        return lista;
+    }
 
     private String belongsToCollectionCrudo;
     private Integer idColeccionRecuperado;

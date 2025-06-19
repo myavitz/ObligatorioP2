@@ -4,6 +4,8 @@ import java.util.Scanner;
 
 public class Menu {
 
+    private DataLoader loader;
+
     public void mostrarMenu(){
 
         Scanner sc = new Scanner(System.in);
@@ -20,7 +22,7 @@ public class Menu {
 
             switch (opcion){
                 case 1 ->{
-                    DataLoader loader = new DataLoader();
+                    loader = new DataLoader();
                     loader.cargarDatos();
                 }
                 case 2 -> {
@@ -53,7 +55,13 @@ public class Menu {
 
             switch (opcionSubMenu) {
                 case 1:
-                    System.out.println("Consulta 1");
+                    if (loader == null) {
+                        System.out.println("Los datos no estan cargados");
+                    } else {
+                        Consultas consulta1 = new Consultas(loader.peliculasComoLista());
+                        consulta1.mostrarTop5PeliculasPorIdioma();
+                    }
+
                 case 2:
                     System.out.println("Consulta 2");
                 case 3:
