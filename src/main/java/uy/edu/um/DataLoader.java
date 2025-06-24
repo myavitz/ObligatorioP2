@@ -12,6 +12,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,8 +29,9 @@ import java.util.Date;
 
 public class DataLoader {
     private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
-    private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
-    private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
+    private MyList<Calificacion> calificaciones = new MyLinkedListImpl<>();
+   // private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
+   // private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
 
     public MyList<Pelicula> peliculasComoLista() {
         MyList<Pelicula> lista = new MyLinkedListImpl<>();
@@ -55,6 +61,7 @@ public class DataLoader {
 
         String csvFile = "movies_metadata.csv";
         String csvcreditos = "credits.csv";
+        String csvratings = "ratings_1mm.csv";
 
         String[] nextLine = null;
 
@@ -140,6 +147,7 @@ public class DataLoader {
                     genres = genres.replace("]\"", "]");
                     genres = genres.replace("\\\"", "\"");
 
+
                     JSONArray arrayGeneros = new JSONArray(genres);
                     for (int i = 0; i < arrayGeneros.length(); i++) {
                         JSONObject generObj = arrayGeneros.getJSONObject(i);
@@ -210,6 +218,7 @@ public class DataLoader {
         int maserrores = 0;
         lineaActual = 0;
         int idpeli=0;
+        int erroresActores=0;
 
         try (CSVReader reader2 = new CSVReaderBuilder(new FileReader(csvcreditos))
                 .withCSVParser(parser)
@@ -245,7 +254,8 @@ public class DataLoader {
 
                 } catch (Exception e) {
                     maserrores++;
-                    System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
+                    erroresActores++;
+                    //System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
                 }
                 try {
                     String repo = nextLine[1];
@@ -268,11 +278,83 @@ public class DataLoader {
                     System.out.println("Error parseando al director en linea: " + lineaActual);
                 }
             }
+            System.out.println("Errores parseando los nombres de los actores: " + erroresActores);
         }catch (IOException e){
-            System.out.println("PAPA");
+            System.out.println("Error, no se encontró el archivo.");
         } catch (CsvValidationException e) {
-            System.out.println("Soy gay");
+            System.out.println("Error, CSV corrupto.");
         }
+
+        lineaActual = 0;
+        idpeli=0;
+        int nerrores=0;
+        int calis=0;
+
+        try (CSVReader reader3 = new CSVReaderBuilder(new FileReader(csvratings))
+                .withCSVParser(parser)
+                .build()) {
+
+            nextLine = null;
+            reader3.readNext();
+            Calificacion nueva = new Calificacion();
+
+            try {
+                while ((nextLine = reader3.readNext()) != null) {
+
+                lineaActual++;
+
+                try {
+                    idpeli = Integer.parseInt(nextLine[1]);
+                    nueva.setMovieId(idpeli);
+                }catch(NumberFormatException e){
+                    System.out.println("Error parseando pelicula Id en linea: " + lineaActual);
+                    nerrores++;
+                }
+
+                try{
+                    int userId = Integer.parseInt(nextLine[0]);
+                    nueva.setUserId(userId);
+
+                }catch (NumberFormatException e){
+                    System.out.println("Error parseando userId en linea: " + lineaActual);
+                    nerrores++;
+
+                }
+
+                try{
+                    double rating = Double.parseDouble(nextLine[2]);
+                    nueva.setPuntuacion(rating);
+                }catch (NumberFormatException e){
+                    System.out.println("Error al parsear el rating en linea: " + lineaActual);
+                    nerrores++;
+                }
+
+                    try {
+                        long timestamp = Long.parseLong(nextLine[3]);
+                        Date fecha = new Date(timestamp * 1000);
+                        nueva.setFecha(fecha);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error al parsear el timeStamp en linea: " + lineaActual);
+                        nerrores++;
+                    }
+                    calificaciones.add(nueva);
+                    Pelicula pelicula2 = peliculas.get(idpeli);
+                    if (pelicula2 !=null){
+                        pelicula2.addCalificacion(nueva);
+                        calis++;
+                    }
+                }
+            }catch (IOException e){
+                System.out.println("Explosion");
+            } catch (CsvValidationException e) {
+                System.out.println("Error, no hay tal archivo o esta mas corrupto que la Cristi(CFK).");
+            }
+            }catch (IOException | CsvValidationException e){
+            System.out.println("Error, no se encontro el archivo.");
+            }
+
+
+
 
         long fin = System.currentTimeMillis();
         System.out.println("Carga finalizada.");
@@ -280,6 +362,6 @@ public class DataLoader {
         System.out.println("Errores de parseo: " + erroresParseo);
         System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
 
-        System.out.println("Total de errores: Peliculas - " + erroresParseo + " Creditos - " + maserrores);
+        System.out.println("Total de errores: Peliculas - " + erroresParseo + " Creditos - " + maserrores + " Ratings - " + nerrores);
     }
 }

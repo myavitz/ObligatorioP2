@@ -12,6 +12,8 @@ public class Menu {
         int opcion;
 
         do{
+            System.out.println("-                                                                                     -");
+            System.out.println("-                                                                                     -");
             System.out.println("Bienvenido al cine UMovie");
             System.out.println("Seleccione una de las siguientes opciones: ");
             System.out.println("1- Cargar los datos.");

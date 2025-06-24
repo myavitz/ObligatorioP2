@@ -13,7 +13,6 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Pelicula {
 
 
@@ -39,11 +38,23 @@ public class Pelicula {
     private Date duracion;
 
 
+    public MyList<Calificacion> getCalificaciones() {
+        return calificaciones;
+    }
 
+    public void addCalificacion(Calificacion c){
+        this.getCalificaciones().add(c);
+    }
 
-
-
-
+    public double promCalificaciones(){
+        int divisor=0;
+        double puntaje=0;
+        for (int i=0; i<calificaciones.size(); i++){
+            divisor++;
+            puntaje += calificaciones.get(i).getPuntuacion();
+        }
+        return puntaje/divisor;
+    }
 
 
 }
