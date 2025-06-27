@@ -63,10 +63,17 @@ public class Menu {
                         System.out.println("Ejecutando consulta...");
                         Consultas consulta1 = new Consultas(loader.peliculasComoLista());
                         consulta1.mostrarTop5PeliculasPorIdioma();
-                    }
+                    }break;
 
                 case 2:
-                    System.out.println("Consulta 2");
+                    if (loader == null){
+                        System.out.println("Los datos no estan cargados");
+                    } else {
+                        System.out.println("Ejecutando consulta...");
+                        Consultas consulta2  = new Consultas(loader.peliculasComoLista());
+                        consulta2.mostrarTop10PeliculasMejorCalificacion();
+                    }break;
+
                 case 3:
                     System.out.println("Consulta 3");
                 case 4:
