@@ -60,6 +60,7 @@ public class Menu {
                     if (loader == null) {
                         System.out.println("Los datos no estan cargados");
                     } else {
+                        System.out.println("Ejecutando consulta...");
                         Consultas consulta1 = new Consultas(loader.peliculasComoLista());
                         consulta1.mostrarTop5PeliculasPorIdioma();
                     }

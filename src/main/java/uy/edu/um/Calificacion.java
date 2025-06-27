@@ -17,4 +17,7 @@ public class Calificacion {
         return "Usuario: " + userId + " | Id Pelicula: " + movieId + " | Puntuación: " + puntuacion + " | Fecha: " + fecha;
     }
 
+    public double getPuntuacion() {
+        return puntuacion;
+    }
 }

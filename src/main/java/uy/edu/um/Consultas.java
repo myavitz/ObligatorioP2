@@ -1,85 +1,92 @@
 package uy.edu.um;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.w3c.dom.ls.LSOutput;
-import uy.edu.um.tad.hash.MyHash;
-import uy.edu.um.tad.hash.MyHashImpl;
-import uy.edu.um.tad.heap.MyHeap;
-import uy.edu.um.tad.heap.MyHeapImpl;
-import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
 
-@Data
-@Builder
-
+import java.util.PriorityQueue;
 
 public class Consultas {
 
-    private final MyList<Pelicula> peliculas;
+    private MyList<Pelicula> peliculas;
 
-    public Consultas(MyList<Pelicula> peliculas){
+    public Consultas(MyList<Pelicula> peliculas) {
         this.peliculas = peliculas;
     }
 
-    // ### Clase auxilia, dejarlo asi o crear una nueva ### //
-    private static class peliculaCalificada implements Comparable<peliculaCalificada>{
-        Pelicula pelicula;
-        int calificaciones;
+    // CONSULTA 1
+    public void mostrarTop5PeliculasPorIdioma() {
+        String[] idiomasObjetivo = {"en", "fr", "it", "es", "pt"};
 
-        public peliculaCalificada(Pelicula pelicula, int cantidad){
-            this.pelicula = pelicula;
-            this.calificaciones = cantidad;
-        }
+        for (String idioma : idiomasObjetivo) {
+            PriorityQueue<Pelicula> topPeliculas = new PriorityQueue<>(
+                    (p1, p2) -> Integer.compare(p2.getCalificaciones().size(), p1.getCalificaciones().size())
+            );
 
-        @Override
-        public int compareTo(peliculaCalificada otra){
-            return Integer.compare(this.calificaciones, otra.calificaciones);
-        }
-    // ### Termina la clase auxiliar ### //
-    }
-    public void mostrarTop5PeliculasPorIdioma(){
-        long startTime = System.currentTimeMillis();
-
-        String[] idiomasElegir = {"en", "fr", "it", "es", "pt"};
-        MyHash<String, MyHeap<peliculaCalificada>> topPorIdioma = new MyHashImpl<>(10);
-
-        for (String idioma : idiomasElegir){
-            topPorIdioma.put(idioma, new MyHeapImpl<>(5, false));
-        }
-        for (int i = 0; i < peliculas.size(); i++){
-            Pelicula p = peliculas.get(i);
-            if (p == null) continue;
-
-            String idioma = p.getIdiomaOriginal();
-            if (topPorIdioma.contains(idioma)){
-                int cantidad = p.getCalificaciones().size();
-                peliculaCalificada entrada = new peliculaCalificada(p, cantidad);
-
-                MyHeap<peliculaCalificada> heap = topPorIdioma.get(idioma);
-                heap.insert(entrada);
-                if (heap.size() > 5){
-                    heap.delete();
+            for (int i = 0; i < peliculas.size(); i++) {
+                Pelicula peli = peliculas.get(i);
+                if (idioma.equalsIgnoreCase(peli.getIdiomaOriginal())) {
+                    topPeliculas.add(peli);
                 }
             }
-        }
-        for (String idioma : idiomasElegir){
-            System.out.println("Top 5 por idioma: " + idioma);
-            MyHeap<peliculaCalificada> heap = topPorIdioma.get(idioma);
 
-            MyList<peliculaCalificada> resultado = new MyLinkedListImpl<>();
-            while (heap.size() > 0){
-                resultado.add(heap.delete());
+            System.out.println("Top 5 películas en idioma: " + idioma.toUpperCase());
+
+            int count = 0;
+            while (!topPeliculas.isEmpty() && count < 5) {
+                Pelicula top = topPeliculas.poll();
+                System.out.println("ID: " + top.getId()
+                        + " | Título: " + top.getTitulo()
+                        + " | Evaluaciones: " + top.getCalificaciones().size()
+                        + " | Idioma: " + top.getIdiomaOriginal());
+                count++;
             }
-            for (int i = resultado.size() - 1; i >= 0; i--){
-                peliculaCalificada pc = resultado.get(i);
-                System.out.println(pc.pelicula.getId() + "," +  pc.pelicula.getTitulo() + "," + pc.calificaciones + "," + idioma);
+
+            if (count == 0) {
+                System.out.println("No se encontraron películas para este idioma.");
             }
+
             System.out.println();
         }
-        long endTime = System.currentTimeMillis();
-        System.out.println("Tiempo de ejecucion: " + (endTime -startTime) + "ms");
     }
+    // TERMINA CONSULTA 1
+
+    // CONSULTA 2
+    public void mostrarTop10PeliculasMejorCalificacion() {
+        PriorityQueue<Pelicula> topPeliculas = new PriorityQueue<>(
+                (p1, p2) -> {
+                    double prom2 = p2.promCalificaciones();
+                    double prom1 = p1.promCalificaciones();
+                    return Double.compare(prom2, prom1); // Orden descendente por promedio
+                }
+        );
+
+        for (int i = 0; i < peliculas.size(); i++) {
+            Pelicula peli = peliculas.get(i);
+            if (!peli.getCalificaciones().isEmpty()) {
+                topPeliculas.add(peli);
+            }
+        }
+
+        System.out.println("Top 10 películas con mejor calificación media:");
+
+        int count = 0;
+        while (!topPeliculas.isEmpty() && count < 10) {
+            Pelicula top = topPeliculas.poll();
+            System.out.printf("ID: %d | Título: %s | Promedio: %.2f | Evaluaciones: %d%n",
+                    top.getId(),
+                    top.getTitulo(),
+                    top.promCalificaciones(),
+                    top.getCalificaciones().size()
+            );
+            count++;
+        }
+
+        if (count == 0) {
+            System.out.println("No se encontraron películas con evaluaciones.");
+        }
+
+        System.out.println();
+    }
+    //TERMINA CONSULTA 2
+
+    // CONSULTA 3
 }
