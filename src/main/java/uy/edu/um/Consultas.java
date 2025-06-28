@@ -1,9 +1,13 @@
 package uy.edu.um;
 
+import uy.edu.um.tad.hash.MyHash;
+import uy.edu.um.tad.hash.MyHashImpl;
 import uy.edu.um.tad.heap.MyHeap;
 import uy.edu.um.tad.heap.MyHeapImpl;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
+
+import java.util.Collection;
 
 public class Consultas {
     private final MyList<Pelicula> peliculas;
@@ -118,4 +122,82 @@ public class Consultas {
 
     }
     //TERMINA LA CONSULTA 2
+
+    //CONSULTA 3
+    public void mostrarTop5CollecionesPorIngresos(){
+        //HASH para acumular ingresos por coleccion
+        MyHash<Integer, ColeccionConIngresos> ingresosPorColeccion = new MyHashImpl<>();
+
+        for (int i = 0; i < peliculas.size(); i++){
+            Pelicula p = peliculas.get(i);
+
+            if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()){
+                try {
+                    int idColeccion = Integer.parseInt(p.getIdColeccion());
+                    String nombreColeccion = p.getTituloColeccion();
+                    int ingresos = p.getGanancias();
+
+                    ColeccionConIngresos coleccion = ingresosPorColeccion.get(idColeccion);
+
+                    if (coleccion == null){
+                        coleccion = new ColeccionConIngresos(idColeccion, nombreColeccion, ingresos);
+                        ingresosPorColeccion.put(idColeccion, coleccion);
+                    } else {
+                        coleccion.ingresosTotales += ingresos;
+                    }
+
+                } catch (NumberFormatException e) {
+                    // ID de colección no válido (ignoramos)
+                }
+            }
+        }
+
+        // Pasamos las colecciones a un heap para obtener el top 5
+        MyHeap<ColeccionConIngresos> heap = new MyHeapImpl<>(false); // false = max heap
+
+        MyList<Integer> claves = ingresosPorColeccion.keys();
+        for (int i = 0; i < claves.size(); i++) {
+            int clave = claves.get(i);
+            ColeccionConIngresos c = ingresosPorColeccion.get(clave);
+            heap.insert(c);
+        }
+
+        System.out.println("Top 5 colecciones con mayores ingresos generados:");
+
+        int count = 0;
+        while (heap.size() > 0 && count < 5) {
+            ColeccionConIngresos top = heap.delete();
+            System.out.printf("ID: %d | Nombre: %s | Ingresos Totales: %d%n",
+                    top.id,
+                    top.nombre,
+                    top.ingresosTotales);
+            count++;
+        }
+
+        if (count == 0) {
+            System.out.println("No se encontraron colecciones con datos suficientes.");
+        }
+
+        System.out.println();
+    }
+
+    // Clase auxiliar para agrupar datos por colección
+    private static class ColeccionConIngresos implements Comparable<ColeccionConIngresos> {
+        int id;
+        String nombre;
+        int ingresosTotales;
+
+        public ColeccionConIngresos(int id, String nombre, int ingresosTotales) {
+            this.id = id;
+            this.nombre = nombre;
+            this.ingresosTotales = ingresosTotales;
+        }
+
+        @Override
+        public int compareTo(ColeccionConIngresos otra) {
+            return Integer.compare(this.ingresosTotales, otra.ingresosTotales); // max heap
+        }
+    }
+    //TERMINA CONSULTA 3
+
 }

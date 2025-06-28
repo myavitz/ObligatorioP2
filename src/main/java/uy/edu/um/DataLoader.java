@@ -90,8 +90,8 @@ public class DataLoader {
 
                 String belongsToCollection = nextLine[1];
 
-                int idColeccion;
-                String nombreColeccion;
+                int idColeccion = -1;
+                String nombreColeccion = "Sin nombre";
                 boolean lineaValida = true;
 
                 try {
@@ -116,6 +116,10 @@ public class DataLoader {
                             lineaValida = false;
                         }
                         nombreColeccion = nextLine[18];
+                    }
+                    if (lineaValida){
+                        pelicula.setIdColeccion(String.valueOf(idColeccion));
+                        pelicula.setTituloColeccion(nombreColeccion);
                     }
                 } catch (Exception e) {
                     System.out.println("Película ignorada por error en belongsToCollection en línea: " + lineaActual);

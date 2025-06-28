@@ -37,7 +37,7 @@ public class Menu {
                 default -> System.out.println("Opción inválida(como vos).");
             }
 
-        }while(opcion != 3);
+        }while(true);
     }
 
     private void mostrarSubMenu(Scanner sc){
@@ -75,7 +75,13 @@ public class Menu {
                     }break;
 
                 case 3:
-                    System.out.println("Consulta 3");
+                    if (loader == null){
+                        System.out.println("Los datos no estan cargados");
+                    } else {
+                        System.out.println("Ejecutando consulta...");
+                        Consultas consulta3 = new Consultas(loader.peliculasComoLista());
+                        consulta3.mostrarTop5CollecionesPorIngresos();
+                    }break;
                 case 4:
                     System.out.println("Consulta 4");
                 case 5:
