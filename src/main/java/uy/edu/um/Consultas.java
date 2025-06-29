@@ -20,6 +20,8 @@ public class Consultas {
 
     //CONSULTA 1
     public void mostrarTop5PeliculasPorIdioma() {
+        long inicio = System.currentTimeMillis();
+
         String[] idiomasObjetivo = {"en", "fr", "it", "es", "pt"};
 
         for (String idioma : idiomasObjetivo) {
@@ -52,7 +54,11 @@ public class Consultas {
 
             System.out.println();
         }
+
+        long fin = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecución de la consulta: " + (fin - inicio) + " ms");
     }
+
 
     // Clase auxiliar interna para el heap
     private static class PeliculaConEvaluaciones implements Comparable<PeliculaConEvaluaciones> {
@@ -73,6 +79,8 @@ public class Consultas {
 
     //CONSULTA 2
     public void mostrarTop10PeliculasMejorCalificacion() {
+        long inicio = System.currentTimeMillis();
+
         MyHeap<PeliculaConPromedio> heap = new MyHeapImpl<>(false); // false = max heap
 
         for (int i = 0; i < peliculas.size(); i++) {
@@ -102,8 +110,10 @@ public class Consultas {
             System.out.println("No se encontraron películas con al menos 100 evaluaciones.");
         }
 
-        System.out.println();
+        long fin = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecución de la consulta: " + (fin - inicio) + " ms\n");
     }
+
 
     // Clase auxiliar para ordenar por promedio en el heap
     private static class PeliculaConPromedio implements Comparable<PeliculaConPromedio> {
@@ -127,7 +137,9 @@ public class Consultas {
 
     //CONSULTA 3
     public void mostrarTop5CollecionesPorIngresos() {
-        //HASH para acumular ingresos por coleccion
+        long inicio = System.currentTimeMillis();
+
+        // HASH para acumular ingresos por colección
         MyHash<Integer, ColeccionConIngresos> ingresosPorColeccion = new MyHashImpl<>();
 
         for (int i = 0; i < peliculas.size(); i++) {
@@ -180,8 +192,10 @@ public class Consultas {
             System.out.println("No se encontraron colecciones con datos suficientes.");
         }
 
-        System.out.println();
+        long fin = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecución de la consulta: " + (fin - inicio) + " ms\n");
     }
+
 
     // Clase auxiliar para agrupar datos por colección
     private static class ColeccionConIngresos implements Comparable<ColeccionConIngresos> {
