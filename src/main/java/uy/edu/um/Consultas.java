@@ -364,9 +364,7 @@ public class Consultas {
             Pelicula p = peliculas.get(i);
             MyList<String> actores = p.getActores();
             MyList<Calificacion> calificaciones = p.getCalificaciones();
-
-            // Hash para saber en qué meses ya fue contada esta película
-            MyHash<Integer, Boolean> mesesYaContados = new MyHashImpl<>();
+            MyHash<Integer, Boolean> peliculaContadaEnMes = new MyHashImpl<>();
 
             for (int j = 0; j < calificaciones.size(); j++) {
                 Calificacion c = calificaciones.get(j);
@@ -380,8 +378,26 @@ public class Consultas {
                 }
                 MyHash<String, int[]> actoresDelMes = datosPorMes.get(mes);
 
+                // Suma calificaciones (siempre)
+                for (int z = 0; z < actores.size(); z++) {
+                    String actor = actores.get(z);
+                    if (!actoresDelMes.contains(actor)) {
+                        actoresDelMes.put(actor, new int[]{0, 0});
+                    }
+                    actoresDelMes.get(actor)[1]++;  // Suma calificación
+                }
+
+                // Suma películas (solo una vez por mes)
+                if (!peliculaContadaEnMes.contains(mes)) {
+                    for (int m = 0; m < actores.size(); m++) {
+                        String actor = actores.get(m);
+                        actoresDelMes.get(actor)[0]++;  // Suma película
+                    }
+                    peliculaContadaEnMes.put(mes, true);
+                }
             }
         }
+
         // Resultados
         for (int mes = 1; mes <= 12; mes++) {
             if (!datosPorMes.contains(mes))  {
