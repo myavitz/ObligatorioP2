@@ -354,6 +354,7 @@ public class Consultas {
             //TRES NUMEROS DESPUES DE LA COMA PARA VER SI HACE BIEN LOS CALCULOS
         }
     }
+
     //TERMINA LA CONSULTA 4
     //Consulta 5
     public void actorConMasCalificacionesPorMes() {
@@ -379,4 +380,7 @@ public class Consultas {
                 }
                 MyHash<String, int[]> actoresDelMes = datosPorMes.get(mes);
 
+            }
+        }
+    }
 }
