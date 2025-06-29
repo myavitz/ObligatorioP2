@@ -382,5 +382,39 @@ public class Consultas {
 
             }
         }
+        // Resultados
+        for (int mes = 1; mes <= 12; mes++) {
+            if (!datosPorMes.contains(mes))  {
+                datosPorMes.put(mes, new MyHashImpl<>());
+            }
+
+            MyHash<String, int[]> actoresDelMes = datosPorMes.get(mes);
+            String actorTop = null;
+            int maxCalificaciones = -1;
+            int peliculasActorTop = 0;
+
+            MyList<String> claves = actoresDelMes.keys();
+            for (int i = 0; i < claves.size(); i++) {
+                String actor = claves.get(i);
+                int[] datos = actoresDelMes.get(actor);
+                int peliculas = datos[0];
+                int calificaciones = datos[1];
+
+                if (calificaciones > maxCalificaciones ||
+                        (calificaciones == maxCalificaciones && peliculas > peliculasActorTop)) {
+                    actorTop = actor;
+                    maxCalificaciones = calificaciones;
+                    peliculasActorTop = peliculas;
+                }
+            }
+
+            if (actorTop != null) {
+                System.out.println("Mes: " + mes);
+                System.out.println("Actor: " + actorTop);
+                System.out.println("Películas: " + peliculasActorTop);
+                System.out.println("Calificaciones: " + maxCalificaciones);
+                System.out.println("------------------------");
+            }
+        }
     }
 }
