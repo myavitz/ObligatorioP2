@@ -19,6 +19,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 */
+import java.time.Instant;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
@@ -33,6 +34,7 @@ public class DataLoader {
     private MyList<Calificacion> calificaciones = new MyLinkedListImpl<>();
    // private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
    // private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
+
 
     public MyList<Pelicula> peliculasComoLista() {
         MyList<Pelicula> lista = new MyLinkedListImpl<>();
@@ -336,8 +338,9 @@ public class DataLoader {
                     }
 
                     try {
-                        long timestamp = Long.parseLong(nextLine[3]);
-                        Date fecha = new Date(timestamp * 1000);
+                        long timestampSecs = Long.parseLong(nextLine[3].trim());  // Usa trim() por seguridad
+                        Instant instant = Instant.ofEpochSecond(timestampSecs);
+                        Date fecha = Date.from(instant);
                         nueva.setFecha(fecha);
                     } catch (NumberFormatException e) {
                         System.out.println("Error al parsear el timeStamp en linea: " + lineaActual);

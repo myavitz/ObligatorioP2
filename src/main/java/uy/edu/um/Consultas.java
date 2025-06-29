@@ -8,8 +8,8 @@ import uy.edu.um.tad.heap.MyHeap;
 import uy.edu.um.tad.heap.MyHeapImpl;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
-import java.util.Collection;
-import java.util.Locale;
+
+import java.util.*;
 
 public class Consultas {
     private final MyList<Pelicula> peliculas;
@@ -126,14 +126,14 @@ public class Consultas {
     //TERMINA LA CONSULTA 2
 
     //CONSULTA 3
-    public void mostrarTop5CollecionesPorIngresos() {
+    public void mostrarTop5CollecionesPorIngresos(){
         //HASH para acumular ingresos por coleccion
         MyHash<Integer, ColeccionConIngresos> ingresosPorColeccion = new MyHashImpl<>();
 
-        for (int i = 0; i < peliculas.size(); i++) {
+        for (int i = 0; i < peliculas.size(); i++){
             Pelicula p = peliculas.get(i);
 
-            if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()) {
+            if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()){
                 try {
                     int idColeccion = Integer.parseInt(p.getIdColeccion());
                     String nombreColeccion = p.getTituloColeccion();
@@ -141,7 +141,7 @@ public class Consultas {
 
                     ColeccionConIngresos coleccion = ingresosPorColeccion.get(idColeccion);
 
-                    if (coleccion == null) {
+                    if (coleccion == null){
                         coleccion = new ColeccionConIngresos(idColeccion, nombreColeccion, ingresos);
                         ingresosPorColeccion.put(idColeccion, coleccion);
                     } else {
@@ -342,5 +342,84 @@ public class Consultas {
         }
     }
     //TERMINA LA CONSULTA 4
+    //Consulta 5
+    public void actorConMasCalificacionesPorMes() {
+        MyHash<Integer, MyHash<String, int[]>> datosPorMes = new MyHashImpl<>();
 
+        for (int i = 0; i < peliculas.size(); i++) {
+            Pelicula p = peliculas.get(i);
+            MyList<String> actores = p.getActores();
+            MyList<Calificacion> calificaciones = p.getCalificaciones();
+
+            // Hash para saber en qué meses ya fue contada esta película
+            MyHash<Integer, Boolean> mesesYaContados = new MyHashImpl<>();
+
+            for (int j = 0; j < calificaciones.size(); j++) {
+                Calificacion c = calificaciones.get(j);
+                Date fecha = c.getFecha();
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                calendar.setTime(fecha);
+                int mes = calendar.get(Calendar.MONTH) + 1;
+
+                if (!datosPorMes.contains(mes)) {
+                    datosPorMes.put(mes, new MyHashImpl<>());
+                }
+                MyHash<String, int[]> actoresDelMes = datosPorMes.get(mes);
+
+                // Sumar calificación (siempre)
+                for (int z = 0; z < actores.size(); z++) {
+                    String actor = actores.get(z);
+                    if (!actoresDelMes.contains(actor)) {
+                        actoresDelMes.put(actor, new int[]{0, 0});
+                    }
+                    actoresDelMes.get(actor)[1]++;
+                }
+
+                // Sumar película (solo una vez por película por mes)
+                if (!mesesYaContados.contains(mes)) {
+                    for (int z = 0; z < actores.size(); z++) {
+                        String actor = actores.get(z);
+                        actoresDelMes.get(actor)[0]++;
+                    }
+                    mesesYaContados.put(mes, true);
+                }
+            }
+        }
+
+        // Resultados
+        for (int mes = 1; mes <= 12; mes++) {
+            if (!datosPorMes.contains(mes))  {
+                datosPorMes.put(mes, new MyHashImpl<>());
+            }
+
+            MyHash<String, int[]> actoresDelMes = datosPorMes.get(mes);
+            String actorTop = null;
+            int maxCalificaciones = -1;
+            int peliculasActorTop = 0;
+
+            MyList<String> claves = actoresDelMes.keys();
+            for (int i = 0; i < claves.size(); i++) {
+                String actor = claves.get(i);
+                int[] datos = actoresDelMes.get(actor);
+                int peliculas = datos[0];
+                int calificaciones = datos[1];
+
+                if (calificaciones > maxCalificaciones ||
+                        (calificaciones == maxCalificaciones && peliculas > peliculasActorTop)) {
+                    actorTop = actor;
+                    maxCalificaciones = calificaciones;
+                    peliculasActorTop = peliculas;
+                }
+            }
+
+            if (actorTop != null) {
+                System.out.println("Mes: " + mes);
+                System.out.println("Actor: " + actorTop);
+                System.out.println("Películas: " + peliculasActorTop);
+                System.out.println("Calificaciones: " + maxCalificaciones);
+                System.out.println("------------------------");
+            }
+        }
+
+    }
 }

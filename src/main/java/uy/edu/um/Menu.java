@@ -96,7 +96,8 @@ public class Menu {
                     } else {
                         System.out.println("Ejecutando consulta...");
                         Consultas consulta5 = new Consultas(loader.peliculasComoLista());
-                    }
+                        consulta5.actorConMasCalificacionesPorMes();
+                    }break;
                 case 6:
                     System.out.println("Consulta 6");
                 case 7:
