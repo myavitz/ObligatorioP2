@@ -83,9 +83,20 @@ public class Menu {
                         consulta3.mostrarTop5CollecionesPorIngresos();
                     }break;
                 case 4:
-                    System.out.println("Consulta 4");
+                    if (loader == null){
+                        System.out.println("Los datos no estan cargados");
+                    } else {
+                        System.out.println("Ejecutando consulta...");
+                        Consultas consulta4 = new Consultas(loader.peliculasComoLista());
+                        consulta4.mostrarTop10DirectoresConMejorPromedio();
+                    }break;
                 case 5:
-                    System.out.println("Consulta 5");
+                    if (loader == null){
+                        System.out.println("Los datos no estan cargados");
+                    } else {
+                        System.out.println("Ejecutando consulta...");
+                        Consultas consulta5 = new Consultas(loader.peliculasComoLista());
+                    }
                 case 6:
                     System.out.println("Consulta 6");
                 case 7:

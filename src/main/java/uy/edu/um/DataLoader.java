@@ -224,6 +224,7 @@ public class DataLoader {
         lineaActual = 0;
         int idpeli=0;
         int erroresActores=0;
+        int directoresCargados = 0;
 
         try (CSVReader reader2 = new CSVReaderBuilder(new FileReader(csvcreditos))
                 .withCSVParser(parser)
@@ -272,11 +273,14 @@ public class DataLoader {
                     for (int i = 0; i < repoarray.length(); i++) {
                         JSONObject actObj = repoarray.getJSONObject(i);
                         String check = actObj.getString("job");
-                        if (check.equals("Director")) {
+                        if (check.equalsIgnoreCase("Director")) {
                             String director = actObj.getString("name");
-                            if (peliculas.get(idpeli) != null)
+                            if (peliculas.get(idpeli) != null) {
                                 peliculas.get(idpeli).setDirector(director);
+                                directoresCargados++;
+                            }
                         }
+
                     }
                 } catch (Exception e) {
                     maserrores++;
@@ -301,38 +305,35 @@ public class DataLoader {
 
             nextLine = null;
             reader3.readNext();
-            Calificacion nueva = new Calificacion();
+            //Calificacion nueva = new Calificacion();
 
             try {
                 while ((nextLine = reader3.readNext()) != null) {
+                    Calificacion nueva = new Calificacion();  //crear dentro del bucle porque me daba todos los promedios de consulta4 3.5
 
-                lineaActual++;
+                    try {
+                        idpeli = Integer.parseInt(nextLine[1]);
+                        nueva.setMovieId(idpeli);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error parseando pelicula Id en linea: " + lineaActual);
+                        nerrores++;
+                    }
 
-                try {
-                    idpeli = Integer.parseInt(nextLine[1]);
-                    nueva.setMovieId(idpeli);
-                }catch(NumberFormatException e){
-                    System.out.println("Error parseando pelicula Id en linea: " + lineaActual);
-                    nerrores++;
-                }
+                    try {
+                        int userId = Integer.parseInt(nextLine[0]);
+                        nueva.setUserId(userId);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error parseando userId en linea: " + lineaActual);
+                        nerrores++;
+                    }
 
-                try{
-                    int userId = Integer.parseInt(nextLine[0]);
-                    nueva.setUserId(userId);
-
-                }catch (NumberFormatException e){
-                    System.out.println("Error parseando userId en linea: " + lineaActual);
-                    nerrores++;
-
-                }
-
-                try{
-                    double rating = Double.parseDouble(nextLine[2]);
-                    nueva.setPuntuacion(rating);
-                }catch (NumberFormatException e){
-                    System.out.println("Error al parsear el rating en linea: " + lineaActual);
-                    nerrores++;
-                }
+                    try {
+                        double rating = Double.parseDouble(nextLine[2]);
+                        nueva.setPuntuacion(rating);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error al parsear el rating en linea: " + lineaActual);
+                        nerrores++;
+                    }
 
                     try {
                         long timestamp = Long.parseLong(nextLine[3]);
@@ -342,13 +343,15 @@ public class DataLoader {
                         System.out.println("Error al parsear el timeStamp en linea: " + lineaActual);
                         nerrores++;
                     }
+
                     calificaciones.add(nueva);
                     Pelicula pelicula2 = peliculas.get(idpeli);
-                    if (pelicula2 !=null){
+                    if (pelicula2 != null) {
                         pelicula2.addCalificacion(nueva);
                         calis++;
                     }
                 }
+
             }catch (IOException e){
                 System.out.println("Explosion");
             } catch (CsvValidationException e) {
@@ -364,6 +367,7 @@ public class DataLoader {
         long fin = System.currentTimeMillis();
         System.out.println("Carga finalizada.");
         System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
+        System.out.println("Directores correctamente cargados: " + directoresCargados);
         System.out.println("Errores de parseo: " + erroresParseo);
         System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
 

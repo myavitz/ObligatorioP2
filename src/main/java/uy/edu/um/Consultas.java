@@ -1,13 +1,15 @@
 package uy.edu.um;
 
+import uy.edu.um.tad.binarytree.MySearchBinaryTree;
+import uy.edu.um.tad.binarytree.MySearchBinaryTreeImpl;
 import uy.edu.um.tad.hash.MyHash;
 import uy.edu.um.tad.hash.MyHashImpl;
 import uy.edu.um.tad.heap.MyHeap;
 import uy.edu.um.tad.heap.MyHeapImpl;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
-
 import java.util.Collection;
+import java.util.Locale;
 
 public class Consultas {
     private final MyList<Pelicula> peliculas;
@@ -124,14 +126,14 @@ public class Consultas {
     //TERMINA LA CONSULTA 2
 
     //CONSULTA 3
-    public void mostrarTop5CollecionesPorIngresos(){
+    public void mostrarTop5CollecionesPorIngresos() {
         //HASH para acumular ingresos por coleccion
         MyHash<Integer, ColeccionConIngresos> ingresosPorColeccion = new MyHashImpl<>();
 
-        for (int i = 0; i < peliculas.size(); i++){
+        for (int i = 0; i < peliculas.size(); i++) {
             Pelicula p = peliculas.get(i);
 
-            if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()){
+            if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()) {
                 try {
                     int idColeccion = Integer.parseInt(p.getIdColeccion());
                     String nombreColeccion = p.getTituloColeccion();
@@ -139,7 +141,7 @@ public class Consultas {
 
                     ColeccionConIngresos coleccion = ingresosPorColeccion.get(idColeccion);
 
-                    if (coleccion == null){
+                    if (coleccion == null) {
                         coleccion = new ColeccionConIngresos(idColeccion, nombreColeccion, ingresos);
                         ingresosPorColeccion.put(idColeccion, coleccion);
                     } else {
@@ -199,5 +201,146 @@ public class Consultas {
         }
     }
     //TERMINA CONSULTA 3
+
+    //CONSULTA 4
+    public void mostrarTop10DirectoresConMejorPromedio() {
+        long inicio = System.currentTimeMillis();
+
+        MyHash<String, DirectorStats> datosPorDirector = agruparDatosPorDirector();
+
+        MyHeap<ResultadoDirector> top10 = construirHeapTop10(datosPorDirector);
+
+        imprimirResultados(top10);
+
+        long fin = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecución de la consulta: " + (fin - inicio) + " ms");
+    }
+
+    private MyHash<String, DirectorStats> agruparDatosPorDirector() {
+        MyHash<String, DirectorStats> datos = new MyHashImpl<>();
+
+        MyList<Pelicula> listaPeliculas = this.peliculas;
+        for (int i = 0; i < listaPeliculas.size(); i++) {
+            Pelicula p = listaPeliculas.get(i);
+            if (p == null || p.getDirector() == null) continue;
+
+            String director = p.getDirector();
+
+            DirectorStats stats = datos.get(director);
+            if (stats == null) {
+                stats = new DirectorStats();
+                datos.put(director, stats);
+            }
+
+            stats.cantidadPeliculas++;
+
+            MyList<Calificacion> calis = p.getCalificaciones();
+            for (int j = 0; j < calis.size(); j++) {
+                stats.agregarCalificacion(calis.get(j).getPuntuacion());
+            }
+        }
+        return datos;
+    }
+
+    private MyHeap<ResultadoDirector> construirHeapTop10(MyHash<String, DirectorStats> datosPorDirector) {
+        MyHeap<ResultadoDirector> heap = new MyHeapImpl<>(true); // min heap
+
+        MyList<String> directores = datosPorDirector.keys();
+        for (int i = 0; i < directores.size(); i++) {
+            String nombre = directores.get(i);
+            DirectorStats ds = datosPorDirector.get(nombre);
+
+            if (ds.cantidadPeliculas > 1 && ds.cantidadEvaluaciones > 100) {
+                double mediana = ds.calcularMediana();
+                ResultadoDirector res = new ResultadoDirector(nombre, ds.cantidadPeliculas, mediana);
+
+                if (heap.size() < 10) {
+                    heap.insert(res);
+                } else if (res.compareTo(heap.get()) > 0) {
+                    heap.delete();
+                    heap.insert(res);
+                }
+            }
+        }
+        return heap;
+    }
+
+    private void imprimirResultados(MyHeap<ResultadoDirector> top10) {
+        MyList<ResultadoDirector> resultadoFinal = new MyLinkedListImpl<>();
+        while (top10.size() > 0) {
+            resultadoFinal.add(top10.delete());
+        }
+        for (int i = resultadoFinal.size() - 1; i >= 0; i--) {
+            System.out.println(resultadoFinal.get(i));
+        }
+    }
+
+
+    //CLASE AUXILIAR 1 PARA CONSULTA 4
+    public class DirectorStats {
+        int cantidadPeliculas = 0;
+        int cantidadEvaluaciones = 0;
+        int contadorUnico = 0;
+
+        // Usamos un árbol binario de búsqueda para mantener las calificaciones ordenadas
+        MySearchBinaryTree<Double, Double> calificaciones = new MySearchBinaryTreeImpl<>();
+
+        public void agregarCalificacion(double calificacion) {
+            // Para evitar claves duplicadas (calificaciones iguales), sumamos un pequeño offset
+            double clave = calificacion + contadorUnico * 0.00001;
+            calificaciones.add(clave, calificacion);
+            contadorUnico++;
+            cantidadEvaluaciones++;
+        }
+
+        public double calcularMediana() {
+            MyList<Double> ordenadas = calificaciones.inOrderValues();
+            int n = ordenadas.size();
+            if (n == 0) return 0;
+
+            if (n % 2 == 1) {
+                return ordenadas.get(n / 2);
+            } else {
+                return (ordenadas.get(n / 2 - 1) + ordenadas.get(n / 2)) / 2.0;
+            }
+        }
+    }
+
+    public class ResultadoDirector implements Comparable<ResultadoDirector> {
+        private final String nombre;
+        private final int cantidadPeliculas;
+        private final double mediana;
+
+        public ResultadoDirector(String nombre, int cantidadPeliculas, double mediana) {
+            this.nombre = nombre;
+            this.cantidadPeliculas = cantidadPeliculas;
+            this.mediana = mediana;
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public int getCantidadPeliculas() {
+            return cantidadPeliculas;
+        }
+
+        public double getMediana() {
+            return mediana;
+        }
+
+        @Override
+        public int compareTo(ResultadoDirector otro) {
+            // Ordenamos por mediana (menor mediana = menor prioridad en min heap)
+            return Double.compare(this.mediana, otro.mediana);
+        }
+
+        @Override
+        public String toString() {
+            return nombre + "," + cantidadPeliculas + "," + String.format(Locale.US, "%.3f", mediana);
+            //TRES NUMEROS DESPUES DE LA COMA PARA VER SI HACE BIEN LOS CALCULOS
+        }
+    }
+    //TERMINA LA CONSULTA 4
 
 }
