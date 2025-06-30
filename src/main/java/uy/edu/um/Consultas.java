@@ -167,52 +167,59 @@ public class Consultas {
     public void mostrarTop5CollecionesPorIngresos() {
         long inicio = System.currentTimeMillis();
 
-        // HASH para acumular ingresos por colección
+        // Hash: ID de colección o película → datos acumulados
         MyHash<Integer, ColeccionConIngresos> ingresosPorColeccion = new MyHashImpl<>();
 
         for (int i = 0; i < peliculas.size(); i++) {
             Pelicula p = peliculas.get(i);
+            int idColeccion;
+            String nombreColeccion;
 
             if (p.getIdColeccion() != null && !p.getIdColeccion().isEmpty()) {
                 try {
-                    int idColeccion = Integer.parseInt(p.getIdColeccion());
-                    String nombreColeccion = p.getTituloColeccion();
-                    int ingresos = p.getGanancias();
-
-                    ColeccionConIngresos coleccion = ingresosPorColeccion.get(idColeccion);
-
-                    if (coleccion == null) {
-                        coleccion = new ColeccionConIngresos(idColeccion, nombreColeccion, ingresos);
-                        ingresosPorColeccion.put(idColeccion, coleccion);
-                    } else {
-                        coleccion.ingresosTotales += ingresos;
-                    }
-
+                    idColeccion = Integer.parseInt(p.getIdColeccion());
+                    nombreColeccion = p.getTituloColeccion();
                 } catch (NumberFormatException e) {
-                    // ID de colección no válido (ignoramos)
+                    // Si falla el parseo, tratamos la película como colección individual
+                    idColeccion = p.getId();
+                    nombreColeccion = p.getTitulo();
                 }
+            } else {
+                idColeccion = p.getId(); // Se trata como colección de una sola película
+                nombreColeccion = p.getTitulo();
             }
+
+            // Obtener o crear la colección
+            ColeccionConIngresos coleccion = ingresosPorColeccion.get(idColeccion);
+            if (coleccion == null) {
+                coleccion = new ColeccionConIngresos(idColeccion, nombreColeccion);
+                ingresosPorColeccion.put(idColeccion, coleccion);
+            }
+
+            coleccion.ingresosTotales += p.getGanancias();
+            coleccion.peliculas.add(p.getId());
         }
 
-        // Pasamos las colecciones a un heap para obtener el top 5
-        MyHeap<ColeccionConIngresos> heap = new MyHeapImpl<>(false); // false = max heap
+        // Heap para top 5
+        MyHeap<ColeccionConIngresos> heap = new MyHeapImpl<>(false); // max-heap
 
         MyList<Integer> claves = ingresosPorColeccion.keys();
         for (int i = 0; i < claves.size(); i++) {
-            int clave = claves.get(i);
-            ColeccionConIngresos c = ingresosPorColeccion.get(clave);
+            ColeccionConIngresos c = ingresosPorColeccion.get(claves.get(i));
             heap.insert(c);
         }
 
         System.out.println("Top 5 colecciones con mayores ingresos generados:");
-
         int count = 0;
         while (heap.size() > 0 && count < 5) {
             ColeccionConIngresos top = heap.delete();
-            System.out.printf("ID: %d | Nombre: %s | Ingresos Totales: %d%n",
+            System.out.printf("%d,%s,%d,%s,%d%n",
                     top.id,
                     top.nombre,
-                    top.ingresosTotales);
+                    top.peliculas.size(),
+                    formatearLista(top.peliculas),
+                    top.ingresosTotales
+            );
             count++;
         }
 
@@ -224,23 +231,37 @@ public class Consultas {
         System.out.println("Tiempo de ejecución de la consulta: " + (fin - inicio) + " ms\n");
     }
 
-
     // Clase auxiliar para agrupar datos por colección
     private static class ColeccionConIngresos implements Comparable<ColeccionConIngresos> {
         int id;
         String nombre;
         int ingresosTotales;
+        MyList<Integer> peliculas;
 
-        public ColeccionConIngresos(int id, String nombre, int ingresosTotales) {
+        public ColeccionConIngresos(int id, String nombre) {
             this.id = id;
             this.nombre = nombre;
-            this.ingresosTotales = ingresosTotales;
+            this.ingresosTotales = 0;
+            this.peliculas = new MyLinkedListImpl<>();
         }
 
         @Override
         public int compareTo(ColeccionConIngresos otra) {
-            return Integer.compare(this.ingresosTotales, otra.ingresosTotales); // max heap
+            return Integer.compare(this.ingresosTotales, otra.ingresosTotales); // max-heap
         }
+    }
+    //METODO AUXILAR PARA CONSULTA 3
+    private String formatearLista(MyList<Integer> lista) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < lista.size(); i++) {
+            sb.append(lista.get(i));
+            if (i < lista.size() - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
     //TERMINA CONSULTA 3
 
