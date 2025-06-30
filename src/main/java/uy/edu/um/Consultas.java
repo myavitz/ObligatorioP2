@@ -411,6 +411,7 @@ public class Consultas {
 
     //Consulta 5
     public void actorConMasCalificacionesPorMes() {
+        long inicio = System.currentTimeMillis();
         MyHash<Integer, MyHash<String, int[]>> datosPorMes = new MyHashImpl<>();
 
         for (int i = 0; i < peliculas.size(); i++) {
@@ -438,6 +439,7 @@ public class Consultas {
                         actoresDelMes.put(actor, new int[]{0, 0});
                     }
                     actoresDelMes.get(actor)[1]++;  // Suma calificación
+
                 }
 
                 // Suma películas (solo una vez por mes)
@@ -485,6 +487,8 @@ public class Consultas {
                 System.out.println("------------------------");
             }
         }
+        long fin = System.currentTimeMillis();
+        System.out.println("Tiempo de ejecucion: "+ (fin-inicio) + "ms");
     }
     //EMPIEZA CONSULTA 6
     //Usuarios con mas calificaciones por genero
