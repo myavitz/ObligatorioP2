@@ -1,5 +1,9 @@
 package uy.edu.um;
 
+import uy.edu.um.tad.hash.MyHash;
+import uy.edu.um.tad.hash.MyHashImpl;
+import uy.edu.um.tad.linkedlist.MyList;
+
 import java.util.Scanner;
 
 public class Menu {
@@ -100,6 +104,26 @@ public class Menu {
                     }break;
                 case 6:
                     System.out.println("Consulta 6");
+                    if (loader == null){
+                        System.out.println("Los datos no están cargados");
+                    } else {
+                        System.out.println("Ejecutando consulta...");
+                        MyList<Pelicula> peliculas = loader.peliculasComoLista();
+                        MyHash<Integer, MyHash<String, Integer>> evals = loader.getEvaluacionesUsuarioPorGenero();
+                        MyList<Integer> clavesUsuarios = loader.getClavesUsuarios();
+                        MyHash<String, Integer> cantidadEvaluacionesPorGenero = loader.getCantidadEvaluacionesPorGenero();
+                        System.out.println("Cantidad de usuarios en evaluacionesUsuarioPorGenero: " + evals.size());
+                        System.out.println("Cantidad de clavesUsuarios: " + clavesUsuarios.size());
+
+                        Consultas consulta6 = new Consultas(peliculas, evals, clavesUsuarios, cantidadEvaluacionesPorGenero);
+
+                        long start = System.currentTimeMillis();
+                        consulta6.usuariosConMasEvaluaciones();
+                        long end = System.currentTimeMillis();
+                        System.out.println("Tiempo total ejecución consulta 6: " + (end - start) + " ms");
+                    }
+                    break;
+
                 case 7:
                     System.out.println("Volviendo al menu principal");
                     opcionSubMenu = 7;

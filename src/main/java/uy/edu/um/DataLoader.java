@@ -32,8 +32,11 @@ import java.util.Date;
 public class DataLoader {
     private MyHash<Integer, Pelicula> peliculas = new MyHashImpl();
     private MyList<Calificacion> calificaciones = new MyLinkedListImpl<>();
-   // private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
-   // private MyHash<Integer, Participante> participantesPorPelicula = new MyHashImpl<>();
+    private MyHash<String, Integer> cantidadEvaluacionesPorGenero = new MyHashImpl<>();
+    private MyHash<Integer, MyHash<String, Integer>> evaluacionesUsuarioPorGenero = new MyHashImpl<>();
+    private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
+    private MyHash<Integer, Boolean> clavesUsuariosMap = new MyHashImpl<>();
+
 
 
     public MyList<Pelicula> peliculasComoLista() {
@@ -49,6 +52,14 @@ public class DataLoader {
         }
 
         return lista;
+    }
+
+    public MyHash<String, Integer> getCantidadEvaluacionesPorGenero() {
+        return cantidadEvaluacionesPorGenero;
+    }
+
+    public MyHash<Integer, MyHash<String, Integer>> getEvaluacionesUsuarioPorGenero() {
+        return evaluacionesUsuarioPorGenero;
     }
 
     private String belongsToCollectionCrudo;
@@ -263,7 +274,7 @@ public class DataLoader {
                 } catch (Exception e) {
                     maserrores++;
                     erroresActores++;
-                    //System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
+                    System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
                 }
                 try {
                     String repo = nextLine[1];
@@ -347,11 +358,44 @@ public class DataLoader {
                         nerrores++;
                     }
 
+
+
+
                     calificaciones.add(nueva);
                     Pelicula pelicula2 = peliculas.get(idpeli);
                     if (pelicula2 != null) {
+                        MyList<String> generos = pelicula2.getGeneros();
+
+                        // Agregá la calificación UNA SOLA VEZ fuera del for
                         pelicula2.addCalificacion(nueva);
                         calis++;
+
+                        // Actualizá la cantidad total por género (contabilizar evaluación por género)
+                        for (int i = 0; i < generos.size(); i++) {
+                            String genero = generos.get(i);
+                            cantidadEvaluacionesPorGenero.put(genero,
+                                    cantidadEvaluacionesPorGenero.contains(genero)
+                                            ? cantidadEvaluacionesPorGenero.get(genero) + 1
+                                            : 1);
+                        }
+
+                        // Asegurarse que el usuario tenga su mapa de géneros
+                        if (!evaluacionesUsuarioPorGenero.contains(nueva.getUserId())) {
+                            evaluacionesUsuarioPorGenero.put(nueva.getUserId(), new MyHashImpl<>());
+                            clavesUsuariosMap.put(nueva.getUserId(), true);
+                        }
+
+                        MyHash<String, Integer> mapaGeneros = evaluacionesUsuarioPorGenero.get(nueva.getUserId());
+
+                        // Actualizar evaluaciones por género para el usuario
+                        for (int i = 0; i < generos.size(); i++) {
+                            String genero = generos.get(i);
+                            mapaGeneros.put(genero,
+                                    mapaGeneros.contains(genero)
+                                            ? mapaGeneros.get(genero) + 1
+                                            : 1);
+                        }
+
                     }
                 }
 
@@ -364,16 +408,25 @@ public class DataLoader {
             System.out.println("Error, no se encontro el archivo.");
             }
 
-
-
-
         long fin = System.currentTimeMillis();
         System.out.println("Carga finalizada.");
         System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
         System.out.println("Directores correctamente cargados: " + directoresCargados);
         System.out.println("Errores de parseo: " + erroresParseo);
         System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
-
         System.out.println("Total de errores: Peliculas - " + erroresParseo + " Creditos - " + maserrores + " Ratings - " + nerrores);
     }
+
+    public MyList<Integer> getClavesUsuarios() {
+        MyList<Integer> lista = new MyLinkedListImpl<>();
+        MyList<Integer> keys = clavesUsuariosMap.keys();
+        for (int i = 0; i < keys.size(); i++) {
+            lista.add(keys.get(i));
+        }
+        return lista;
+    }
+
+
+
+
 }

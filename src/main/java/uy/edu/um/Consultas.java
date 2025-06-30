@@ -12,11 +12,40 @@ import uy.edu.um.tad.linkedlist.MyList;
 import java.util.*;
 
 public class Consultas {
-    private final MyList<Pelicula> peliculas;
+    private  MyList<Pelicula> peliculas = new MyLinkedListImpl<>();
+    private  MyHash<Integer, MyHash<String, Integer>> evaluacionesUsuarioPorGenero = new MyHashImpl<>();
+    private  MyList<Integer> clavesUsuarios = new MyLinkedListImpl<>();
+    private  MyHash<Integer, MyList<String>> generosPorUsuario = new MyHashImpl<>();
+    private  MyHash<String, Integer> cantidadEvaluacionesPorGenero = new MyHashImpl<>();
 
     public Consultas(MyList<Pelicula> peliculas) {
         this.peliculas = peliculas;
     }
+
+    public Consultas(MyList<Pelicula> peliculas, MyHash<Integer, MyHash<String, Integer>> evaluacionesUsuarioPorGenero) {
+        this.evaluacionesUsuarioPorGenero = evaluacionesUsuarioPorGenero;
+    }
+
+    public Consultas(MyList<Pelicula> peliculas, MyHash<Integer, MyHash<String, Integer>> evals, MyList<Integer> clavesUsuarios, MyHash<String, Integer> cantidadEvaluacionesPorGenero) {
+        this.peliculas = peliculas;
+        this.evaluacionesUsuarioPorGenero = evals;
+        this.clavesUsuarios = clavesUsuarios;
+        this.cantidadEvaluacionesPorGenero = cantidadEvaluacionesPorGenero;
+    }
+
+    public static class RegistroEvaluacion {
+        public Integer userId;
+        public String genero;
+        public Integer cantidad;
+
+        public RegistroEvaluacion(Integer userId, String genero, Integer cantidad) {
+            this.userId = userId;
+            this.genero = genero;
+            this.cantidad = cantidad;
+        }
+    }
+
+
 
     //CONSULTA 1
     public void mostrarTop5PeliculasPorIdioma() {
@@ -338,6 +367,8 @@ public class Consultas {
             return cantidadPeliculas;
         }
 
+
+
         public double getMediana() {
             return mediana;
         }
@@ -356,6 +387,7 @@ public class Consultas {
     }
 
     //TERMINA LA CONSULTA 4
+
     //Consulta 5
     public void actorConMasCalificacionesPorMes() {
         MyHash<Integer, MyHash<String, int[]>> datosPorMes = new MyHashImpl<>();
@@ -433,4 +465,95 @@ public class Consultas {
             }
         }
     }
+    //EMPIEZA CONSULTA 6
+    //Usuarios con mas calificaciones por genero
+    public void usuariosConMasEvaluaciones() {
+        long inicio = System.currentTimeMillis();
+
+        // Verificación inicial
+        if (evaluacionesUsuarioPorGenero == null || evaluacionesUsuarioPorGenero.size() == 0) {
+            System.out.println("No hay datos de evaluaciones por usuario.");
+            return;
+        }
+
+        if (cantidadEvaluacionesPorGenero == null || cantidadEvaluacionesPorGenero.size() == 0) {
+            System.out.println("No hay datos de evaluaciones por género.");
+            return;
+        }
+
+        System.out.println("→ Inicio de consulta 6");
+
+        // Paso 1: Obtener top 10 géneros con Heap
+        long paso1Inicio = System.currentTimeMillis();
+        MyHeap<GeneroConCantidad> heap = new MyHeapImpl<>(false); // max heap
+
+        MyList<String> generos = cantidadEvaluacionesPorGenero.keys();
+        for (int i = 0; i < generos.size(); i++) {
+            String genero = generos.get(i);
+            int cant = cantidadEvaluacionesPorGenero.get(genero);
+            heap.insert(new GeneroConCantidad(genero, cant));
+        }
+
+        int topN = Math.min(10, generos.size());
+        String[] top10Generos = new String[topN];
+        for (int i = 0; i < topN; i++) {
+            GeneroConCantidad gc = heap.delete();
+            top10Generos[i] = gc.genero;
+        }
+        long paso1Fin = System.currentTimeMillis();
+        System.out.println("✔ Paso 1 (top 10 géneros): " + (paso1Fin - paso1Inicio) + " ms");
+
+        MyList<Integer> clavesUsuarios = evaluacionesUsuarioPorGenero.keys();
+
+        for (int i = 0; i < top10Generos.length; i++) {
+            String genero = top10Generos[i];
+            int maxCantidad = -1;
+            MyList<Integer> usuariosMax = new MyLinkedListImpl<>();
+
+            for (int j = 0; j < clavesUsuarios.size(); j++) {
+                Integer userId = clavesUsuarios.get(j);
+                MyHash<String, Integer> mapaGeneroUsuario = evaluacionesUsuarioPorGenero.get(userId);
+
+                if (mapaGeneroUsuario.contains(genero)) {
+                    int cant = mapaGeneroUsuario.get(genero);
+                    if (cant > maxCantidad) {
+                        maxCantidad = cant;
+                        usuariosMax = new MyLinkedListImpl<>();
+                        usuariosMax.add(userId);
+                    } else if (cant == maxCantidad) {
+                        usuariosMax.add(userId);
+                    }
+                }
+            }
+
+            // Imprimir resultados del género
+            System.out.println("▶ Género: " + genero);
+            for (int k = 0; k < usuariosMax.size(); k++) {
+                System.out.println("  Usuario ID: " + usuariosMax.get(k) + " | Cantidad evaluaciones: " + maxCantidad);
+            }
+            System.out.println();
+        }
+
+        // Fin
+        long fin = System.currentTimeMillis();
+        System.out.println("✔ Tiempo total de consulta 6: " + (fin - inicio) + " ms");
+    }
+
+    // Clase auxiliar
+    private static class GeneroConCantidad implements Comparable<GeneroConCantidad> {
+        String genero;
+        int cantidad;
+
+        public GeneroConCantidad(String genero, int cantidad) {
+            this.genero = genero;
+            this.cantidad = cantidad;
+        }
+
+        @Override
+        public int compareTo(GeneroConCantidad o) {
+            return Integer.compare(this.cantidad, o.cantidad); // Para max heap
+        }
+    }
+
+
 }
