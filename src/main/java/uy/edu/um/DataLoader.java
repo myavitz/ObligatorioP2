@@ -125,7 +125,7 @@ public class DataLoader {
                         try {
                             idColeccion = Integer.parseInt(nextLine[5]); // id de la película
                         } catch (NumberFormatException e) {
-                            System.out.println("ID inválido en línea: " + lineaActual);
+                            //System.out.println("ID inválido en línea: " + lineaActual);
                             lineaValida = false;
                         }
                         nombreColeccion = nextLine[18];
@@ -143,8 +143,6 @@ public class DataLoader {
                 }
 
                 if (!lineaValida) {
-                    System.out.println("Película ignorada por ID inválido en línea: " + lineaActual);
-                    System.out.println("----------------------------------------------------");
                     erroresParseo++;
                     continue;
                 }
@@ -274,7 +272,7 @@ public class DataLoader {
                 } catch (Exception e) {
                     maserrores++;
                     erroresActores++;
-                    System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
+                    //System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
                 }
                 try {
                     String repo = nextLine[1];
@@ -300,7 +298,7 @@ public class DataLoader {
                     System.out.println("Error parseando al director en linea: " + lineaActual);
                 }
             }
-            System.out.println("Errores parseando los nombres de los actores: " + erroresActores);
+            //System.out.println("Errores parseando los nombres de los actores: " + erroresActores);
         }catch (IOException e){
             System.out.println("Error, no se encontró el archivo.");
         } catch (CsvValidationException e) {
@@ -409,12 +407,13 @@ public class DataLoader {
             }
 
         long fin = System.currentTimeMillis();
-        System.out.println("Carga finalizada.");
+        System.out.println("Carga finalizada: ");
         System.out.println("Películas cargadas exitosamente: " + peliculasCargadas);
         System.out.println("Directores correctamente cargados: " + directoresCargados);
         System.out.println("Errores de parseo: " + erroresParseo);
         System.out.println("Tiempo total de carga: " + (fin - inicio) + " ms");
         System.out.println("Total de errores: Peliculas - " + erroresParseo + " Creditos - " + maserrores + " Ratings - " + nerrores);
+        System.out.println("Volviendo al menú....");
     }
 
     public MyList<Integer> getClavesUsuarios() {
@@ -425,8 +424,6 @@ public class DataLoader {
         }
         return lista;
     }
-
-
 
 
 }

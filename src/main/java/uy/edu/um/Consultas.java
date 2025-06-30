@@ -580,5 +580,4 @@ public class Consultas {
         }
     }
 
-
 }

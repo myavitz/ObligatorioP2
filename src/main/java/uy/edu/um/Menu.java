@@ -28,6 +28,7 @@ public class Menu {
 
             switch (opcion){
                 case 1 ->{
+                    System.out.println("Iniciando la carga de Datos...");
                     loader = new DataLoader();
                     loader.cargarDatos();
                 }
@@ -35,7 +36,7 @@ public class Menu {
                     mostrarSubMenu(sc);
                 }
                 case 3 ->{
-                    System.out.println("Saliendo..");
+                    System.out.println("Saliendo...");
                     System.exit(1);
                 }
                 default -> System.out.println("Opción inválida(como vos).");
@@ -112,6 +113,7 @@ public class Menu {
                         MyHash<Integer, MyHash<String, Integer>> evals = loader.getEvaluacionesUsuarioPorGenero();
                         MyList<Integer> clavesUsuarios = loader.getClavesUsuarios();
                         MyHash<String, Integer> cantidadEvaluacionesPorGenero = loader.getCantidadEvaluacionesPorGenero();
+
                         System.out.println("Cantidad de usuarios en evaluacionesUsuarioPorGenero: " + evals.size());
                         System.out.println("Cantidad de clavesUsuarios: " + clavesUsuarios.size());
 
