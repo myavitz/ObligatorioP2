@@ -37,8 +37,6 @@ public class DataLoader {
     private MyHash<Integer, MyList<Calificacion>> ratingsPorPelicula = new MyHashImpl<>();
     private MyHash<Integer, Boolean> clavesUsuariosMap = new MyHashImpl<>();
 
-
-
     public MyList<Pelicula> peliculasComoLista() {
         MyList<Pelicula> lista = new MyLinkedListImpl<>();
         MyList<Integer> claves = peliculas.keys();
@@ -65,8 +63,6 @@ public class DataLoader {
     private String belongsToCollectionCrudo;
     private Integer idColeccionRecuperado;
     private String nombreColeccionRecuperado;
-
-
     public void cargarDatos() {
         int lineaActual = 1;
         int peliculasCargadas = 0;
@@ -89,7 +85,6 @@ public class DataLoader {
                 .build()) {
 
             reader.readNext(); // salto cabecera
-
             while ((nextLine = reader.readNext()) != null) {
                 lineaActual++;
 
@@ -98,11 +93,8 @@ public class DataLoader {
                     erroresParseo++;
                     continue;
                 }
-
                 Pelicula pelicula = new Pelicula();
-
                 String belongsToCollection = nextLine[1];
-
                 int idColeccion = -1;
                 String nombreColeccion = "Sin nombre";
                 boolean lineaValida = true;
@@ -111,12 +103,8 @@ public class DataLoader {
                     if (belongsToCollection != null && !belongsToCollection.equals("null") && !belongsToCollection.isEmpty() && belongsToCollection.trim().startsWith("{")) {
                         belongsToCollection = belongsToCollection.replaceAll("(?<=\\{|, )'(\\w+)':", "\"$1\":");  // claves
                         belongsToCollection = belongsToCollection.replaceAll(":\\s*'(.*?)'(?=[,}])", ": \"$1\""); // valores
-
-
                         // Corregir comillas internas mal puestas
-
                         belongsToCollection = belongsToCollection.replace("None", "null");
-
 
                         JSONObject jsonColeccion = new JSONObject(belongsToCollection);
                         idColeccion = jsonColeccion.getInt("id");
@@ -217,7 +205,6 @@ public class DataLoader {
 
                 } catch (Exception e) {
                     System.out.println("Error procesando datos finales de la película con id: " + (nextLine != null && nextLine.length > 5 ? nextLine[5] : "desconocido"));
-                    e.printStackTrace();
                     erroresParseo++;
                 }
             }
@@ -228,7 +215,7 @@ public class DataLoader {
             if (nextLine != null && nextLine.length > 5) {
                 System.out.println("ID o dato clave: " + nextLine[5]);
             }
-            e.printStackTrace();
+            System.out.println("Todo mal.");;
         }
 
         int maserrores = 0;
@@ -272,7 +259,6 @@ public class DataLoader {
                 } catch (Exception e) {
                     maserrores++;
                     erroresActores++;
-                    //System.out.println("Error parseando el nombre del actor en linea: " + lineaActual);
                 }
                 try {
                     String repo = nextLine[1];
@@ -316,7 +302,6 @@ public class DataLoader {
 
             nextLine = null;
             reader3.readNext();
-            //Calificacion nueva = new Calificacion();
 
             try {
                 while ((nextLine = reader3.readNext()) != null) {
@@ -355,9 +340,6 @@ public class DataLoader {
                         System.out.println("Error al parsear el timeStamp en linea: " + lineaActual);
                         nerrores++;
                     }
-
-
-
 
                     calificaciones.add(nueva);
                     Pelicula pelicula2 = peliculas.get(idpeli);

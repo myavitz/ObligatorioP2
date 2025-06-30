@@ -1,5 +1,4 @@
 package uy.edu.um;
-
 import uy.edu.um.tad.binarytree.MySearchBinaryTree;
 import uy.edu.um.tad.binarytree.MySearchBinaryTreeImpl;
 import uy.edu.um.tad.hash.MyHash;
@@ -8,7 +7,6 @@ import uy.edu.um.tad.heap.MyHeap;
 import uy.edu.um.tad.heap.MyHeapImpl;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 import uy.edu.um.tad.linkedlist.MyList;
-
 import java.util.*;
 
 public class Consultas {
@@ -44,8 +42,6 @@ public class Consultas {
             this.cantidad = cantidad;
         }
     }
-
-
 
     //CONSULTA 1
     public void mostrarTop5PeliculasPorIdioma() {
@@ -491,7 +487,7 @@ public class Consultas {
         System.out.println("Tiempo de ejecucion: "+ (fin-inicio) + "ms");
     }
     //EMPIEZA CONSULTA 6
-    //Usuarios con mas calificaciones por genero
+    //Usuarios con más calificaciones por género
     public void usuariosConMasEvaluaciones() {
         long inicio = System.currentTimeMillis();
 
